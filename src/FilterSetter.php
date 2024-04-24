@@ -34,6 +34,7 @@ if ( ! class_exists( 'FilterSetter' ) ) :
 	 * Simplifies the process of setting filters in WordPress to return specific boolean values, with conditional application.
 	 */
 	class FilterSetter {
+
 		/**
 		 * @var array Filters to be applied with conditions.
 		 */

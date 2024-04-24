@@ -13,6 +13,7 @@ declare( strict_types=1 );
 
 namespace ArrayPress\Utils;
 
+use Exception;
 use InvalidArgumentException;
 use function call_user_func;
 use function is_array;
@@ -24,18 +25,19 @@ if ( ! function_exists( 'remove_actions' ) ) {
 	/**
 	 * Function to instantiate the Unhooker class and remove specified actions.
 	 *
-	 * Supports multiple input formats for defining actions.
+	 * Supports multiple input formats for defining actions, including an optional hook for delayed action removal.
 	 *
 	 * @param array         $actions          Array of action information or associative array where keys are 'tags' and values are 'functions'.
 	 * @param int           $default_priority Default priority if not specified for an action.
 	 * @param callable|null $global_condition A global condition that must be true to remove any action.
+	 * @param string|null   $hook             The specific WordPress hook on which to bind the action removal process.
 	 * @param callable|null $error_callback   A callback function for error handling.
 	 *
 	 * @return Unhooker|null The initialized Unhooker instance or null on failure.
 	 */
-	function remove_actions( array $actions, int $default_priority = 10, ?callable $global_condition = null, ?callable $error_callback = null ): ?Unhooker {
+	function remove_actions( array $actions, int $default_priority = 10, ?callable $global_condition = null, ?string $hook = null, ?callable $error_callback = null ): ?Unhooker {
 		try {
-			$unhooker = new Unhooker( null, $default_priority, $global_condition );
+			$unhooker = new Unhooker( $hook, $default_priority, $global_condition );
 
 			foreach ( $actions as $key => $value ) {
 				if ( is_int( $key ) && is_array( $value ) ) {
@@ -44,7 +46,6 @@ if ( ! function_exists( 'remove_actions' ) ) {
 							call_user_func( $error_callback, new InvalidArgumentException( "Invalid tag or function" ) );
 						}
 						continue;
-
 					}
 					$tag                = $value['tag'];
 					$function_to_remove = $value['function'];
@@ -56,7 +57,7 @@ if ( ! function_exists( 'remove_actions' ) ) {
 					$priority           = $default_priority;  // Default priority
 					$condition          = null;  // No condition
 				} else {
-					continue;
+					continue;  // Skip malformed entries
 				}
 
 				$unhooker->add( $tag, $function_to_remove, $priority, $condition );
@@ -65,7 +66,7 @@ if ( ! function_exists( 'remove_actions' ) ) {
 			$unhooker->commit();
 
 			return $unhooker;
-		} catch ( \Exception $e ) {
+		} catch ( Exception $e ) {
 			if ( $error_callback && is_callable( $error_callback ) ) {
 				call_user_func( $error_callback, $e );
 			}

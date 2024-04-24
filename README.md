@@ -33,7 +33,8 @@ composer require arraypress/unhooker
 require_once __DIR__ . '/vendor/autoload.php';
 
 // Use the Slurp class from the ArrayPress\Utils namespace.
-Use ArrayPress\Utils;
+use function ArrayPress\Utils\remove_actions;
+use function ArrayPress\Utils\set_filters;
 ```
 
 #### Removing Actions
