@@ -1,0 +1,26 @@
+{
+  "name": "arraypress/unhooker",
+  "description": "Streamlines the bulk removal of WordPress actions and filters, enabling dynamic, conditional unhooking for enhanced plugin and theme development.",
+  "homepage": "https://github.com/arraypress/unhooker/",
+  "type": "library",
+  "license": "GPL-2.0-or-later",
+  "authors": [
+    {
+      "name": "David Sherlock",
+      "homepage": "https://arraypress.com/"
+    }
+  ],
+  "require": {
+    "php": "^7.4 || ^8.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "ArrayPress\\Utils\\": "src/"
+    },
+    "files": [
+      "src/Functions.php"
+    ]
+  },
+  "minimum-stability": "dev",
+  "prefer-stable": true
+}
