@@ -43,33 +43,43 @@ if ( ! class_exists( 'FilterSetter' ) ) :
 		/**
 		 * @var callable|null Global condition that must be met to apply any filter.
 		 */
-		private $global_condition = null;
+		private $global_condition;
+
+		/**
+		 * @var string|null The specific WordPress hook on which to apply filters.
+		 */
+		private ?string $hook;
+
+		/**
+		 * @var int Priority for the hook when applying filters to WordPress.
+		 */
+		private int $hook_priority;
 
 		/**
 		 * Constructor.
 		 *
-		 * Initializes the filter settings based on an associative array of filter tags with boolean values.
+		 * Initializes the filter settings based on an optional global condition, hook, and priority.
 		 *
-		 * @param array         $initialFilters Associative array of filter tags with boolean values to set them to.
-		 * @param callable|null $condition      A global conditional callback that must return true to apply any filter.
+		 * @param callable|null $global_condition Global condition that must be met to apply any filter.
+		 * @param string|null   $hook             The hook to bind the filter application to, default is null.
+		 * @param int           $hook_priority    Priority with which the filters are executed on the hook, default is 10.
 		 */
-		public function __construct( array $initialFilters = [], ?callable $condition = null ) {
-			foreach ( $initialFilters as $tag => $value ) {
-				$this->add( $tag, $value );
-			}
-			$this->global_condition = $condition;
+		public function __construct( ?callable $global_condition = null, ?string $hook = null, int $hook_priority = 10 ) {
+			$this->global_condition = $global_condition;
+			$this->hook             = $hook;
+			$this->hook_priority    = $hook_priority;
 		}
 
 		/**
 		 * Adds a filter to the list with an optional condition.
 		 *
-		 * @param string        $tag       The name of the filter to apply.
+		 * @param string        $hook      The name of the filter to apply.
 		 * @param bool          $value     The boolean value the filter should return.
 		 * @param callable|null $condition A local conditional callback that must return true to apply the filter.
 		 */
-		public function add( string $tag, bool $value, ?callable $condition = null ): void {
+		public function add( string $hook, bool $value, ?callable $condition = null ): void {
 			$this->filters[] = [
-				'tag'       => $tag,
+				'hook'      => $hook,
 				'value'     => $value,
 				'condition' => $condition
 			];
@@ -85,11 +95,34 @@ if ( ! class_exists( 'FilterSetter' ) ) :
 		}
 
 		/**
-		 * Applies all configured filters, respecting global and local conditions.
+		 * Set or change the WordPress hook and its priority to apply filters.
 		 *
-		 * Executes each filter setting only if the global and local conditions are met.
+		 * @param string   $hook          The WordPress hook to which the filter application will be bound.
+		 * @param int|null $hook_priority Optional. The priority at which the filters are executed on the hook. Defaults to 10.
+		 */
+		public function set_hook( string $hook, ?int $hook_priority = null ): void {
+			$this->hook = $hook;
+			if ( $hook_priority !== null ) {
+				$this->hook_priority = $hook_priority;
+			}
+		}
+
+		/**
+		 * Applies all configured filters, respecting global and local conditions.
+		 * Filters are applied either immediately or at a specified hook.
 		 */
 		public function commit(): void {
+			if ( $this->hook ) {
+				add_action( $this->hook, [ $this, 'apply_filters' ], $this->hook_priority );
+			} else {
+				$this->apply_filters();
+			}
+		}
+
+		/**
+		 * Internal method to apply filters according to the specified configurations.
+		 */
+		public function apply_filters(): void {
 			if ( $this->global_condition && ! call_user_func( $this->global_condition ) ) {
 				return; // Global condition not met, skip all filters.
 			}
@@ -97,13 +130,14 @@ if ( ! class_exists( 'FilterSetter' ) ) :
 			foreach ( $this->filters as $filter ) {
 				if ( empty( $filter['condition'] ) || call_user_func( $filter['condition'] ) ) {
 					if ( $filter['value'] ) {
-						add_filter( $filter['tag'], '__return_true' );
+						add_filter( $filter['hook'], '__return_true' );
 					} else {
-						add_filter( $filter['tag'], '__return_false' );
+						add_filter( $filter['hook'], '__return_false' );
 					}
 				}
 			}
 		}
+
 	}
 
 endif;

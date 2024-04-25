@@ -32,51 +32,95 @@ composer require arraypress/unhooker
 // Require the Composer autoloader.
 require_once __DIR__ . '/vendor/autoload.php';
 
-// Use the Slurp class from the ArrayPress\Utils namespace.
+// Use the functions from the ArrayPress\Utils namespace.
 use function ArrayPress\Utils\remove_actions;
+use function ArrayPress\Utils\remove_filters;
 use function ArrayPress\Utils\set_filters;
 ```
+### Removing Actions and Filters
 
-#### Removing Actions
+#### Basic Removal
 
-You can remove actions dynamically with the `remove_actions` function. This function supports both simple and detailed configurations:
-
+Remove actions or filters immediately without conditions:
 ```php
-// Using the remove_actions function to manage hooks conditionally
-remove_actions([
-    [ 'tag' => 'wp_head', 'function' => 'wp_generator', 'priority' => 10 ],
-    [ 'tag' => 'init', 'function' => 'disable_wp_cron', 'priority' => 10, 'condition' => function() { return defined('DISABLE_WP_CRON'); } ]
-]);
-
-// Simple format
-remove_actions( [
-    'admin_init' => 'redirect_non_admin_users',
-    'wp_footer' => 'inject_footer_script'
-] );
-
-// Using remove_actions with a global priority
-remove_actions([
-    [ 'tag' => 'wp_head', 'function' => 'remove_wp_version' ],  // Default global priority applied
-    [ 'tag' => 'wp_footer', 'function' => 'footer_custom_code', 'priority' => 5 ]  // Specific priority overriding the global
-], 10);  // Global priority set to 10
-
-// Using remove_actions with a global conditional callback
-remove_actions([
-    [ 'tag' => 'admin_bar_init', 'function' => 'remove_admin_bar' ],  // Global condition applied
-    [ 'tag' => 'init', 'function' => 'custom_plugin_init', 'condition' => function() { return current_user_can('manage_options'); } ]  // Specific local condition
-], 10, function() { return !is_admin(); });  // Global condition to apply only on the frontend
+remove_actions( [ 'init' => 'wp_cron' ] );
+remove_filters( [ 'the_content' => 'wpautop' ] );
 ```
 
-#### Setting Filters
+#### Advanced Removal
 
-Similarly, you can set filters using the `set_filters` function:
+Remove multiple actions with one call, each with specific conditions and priorities.
 
 ```php
-// Dynamically set filters with optional conditions
+remove_actions( [
+    [ 'hook' => 'wp_head', 'callback' => 'wp_generator', 'priority' => 1 ],
+    [ 'hook' => 'wp_head', 'callback' => 'rel_canonical' ],
+    [ 'hook' => 'wp_footer', 'callback' => 'wp_print_footer_scripts', 'priority' => 20 ]
+], 10, null, 'wp_loaded', 15 );
+```
+
+#### Conditional and Delayed Removal
+
+Remove an action only if a certain condition is met, and bind it to a specific hook with a custom priority:
+
+```php
+remove_actions([
+    ['hook' => 'wp_footer', 'callback' => 'wp_print_footer_scripts', 'priority' => 20]
+], 10, function() { return is_page( 'home' ); }, 'wp_loaded', 15 );
+```
+
+### Conditional Removal
+
+```php
+remove_actions( [
+    [ 'hook' => 'wp_head', 'callback' => 'wp_generator' ]
+    ], 10, function() {
+    return is_singular('download');
+}, 'wp' );
+```
+
+### Setting Filters
+
+#### Basic Filter Setting
+
+Immediately apply a filter returning a boolean value:
+
+```php
+set_filters( [ 'show_admin_bar' => false ] );
+
+// Apply multiple filters, each with specific conditions and priorities.
 set_filters([
-    [ 'tag' => 'show_admin_bar', 'value' => false, 'condition' => function() { return !current_user_can('edit_posts'); } ],
-    'auto_update_plugin' => true  // Always apply this filter
-]);
+    'show_admin_bar' => [ 'value' => false, 'condition' => function() { return !current_user_can('administrator'); } ],
+    'excerpt_length' => [ 'value' => 20, 'condition' => function() { return is_home(); } ]
+], function() {
+    return is_user_logged_in();
+}, 'init', 20 );
+```
+
+#### Conditionally Applying Filters on a Hook
+
+Apply a filter only if a certain condition is met, during a specific hook:
+
+```php
+set_filters( [
+    'show_admin_bar' => false
+], function() {
+    return ! is_user_logged_in();
+}, 'init', 20 );
+```
+
+#### Advanced Filter Setting with Error Handling
+
+Set a filter with error handling and conditional logic:
+
+```php
+set_filters( [
+    'comment_post' => true
+], function() {
+    return current_user_can( 'moderate_comments' );
+}, 'comments_open', 10, function( $error ) {
+    error_log(' Failed to set filter: ' . $error->getMessage() );
+} );
 ```
 
 ## Contributions

@@ -29,7 +29,7 @@ namespace ArrayPress\Utils;
 
 use function add_action;
 use function call_user_func;
-use function remove_action;
+use function remove_filter;
 
 if ( ! class_exists( 'Unhooker' ) ) :
 
@@ -45,11 +45,6 @@ if ( ! class_exists( 'Unhooker' ) ) :
 		private array $actions = [];
 
 		/**
-		 * @var string|null The specific WordPress hook on which to remove actions.
-		 */
-		private ?string $hook;
-
-		/**
 		 * @var int Default priority for action removal if not specified in the add method.
 		 */
 		private int $default_priority;
@@ -60,6 +55,16 @@ if ( ! class_exists( 'Unhooker' ) ) :
 		private $global_condition;
 
 		/**
+		 * @var string|null The specific WordPress hook on which to remove actions.
+		 */
+		private ?string $hook;
+
+		/**
+		 * * @var int Priority for the hook when adding actions to WordPress.
+		 */
+		private int $hook_priority;
+
+		/**
 		 * @var array Stores the results of each removal attempt.
 		 */
 		private array $removal_results = [];
@@ -67,29 +72,32 @@ if ( ! class_exists( 'Unhooker' ) ) :
 		/**
 		 * Constructor.
 		 *
-		 * Optionally specifies a WordPress hook and default priority on which the actions should be removed.
+		 * Optionally specifies a WordPress hook, default priority, and global condition under which the actions should be removed.
 		 *
-		 * @param string|null $hook     The hook to bind the removal to.
-		 * @param int         $priority Default priority for all removals.
+		 * @param int           $default_priority Default priority for all removals, default is 10.
+		 * @param callable|null $global_condition Global condition that must be met to perform removals.
+		 * @param string|null   $hook             The hook to bind the removal to, default is null.
+		 * @param int           $hook_priority    Priority with which the removals are executed on the hook, default is 10.
 		 */
-		public function __construct( ?string $hook = null, int $priority = 10, ?callable $condition = null ) {
+		public function __construct( int $default_priority = 10, ?callable $global_condition = null, ?string $hook = null, int $hook_priority = 10 ) {
+			$this->default_priority = $default_priority;
+			$this->global_condition = $global_condition;
 			$this->hook             = $hook;
-			$this->default_priority = $priority;
-			$this->global_condition = $condition;
+			$this->hook_priority    = $hook_priority;
 		}
 
 		/**
 		 * Adds an action to the queue for removal, with an optional local condition.
 		 *
-		 * @param string        $tag                The name of the action to remove.
-		 * @param callable      $function_to_remove The function to remove from the action.
-		 * @param int|null      $priority           The priority of the function (optional).
-		 * @param callable|null $condition          A local conditional callback that must return true to remove the action.
+		 * @param string        $hook      The name of the action to remove.
+		 * @param callable      $callback  The function to remove from the action.
+		 * @param int|null      $priority  The priority of the function (optional).
+		 * @param callable|null $condition A local conditional callback that must return true to remove the action.
 		 */
-		public function add( string $tag, callable $function_to_remove, ?int $priority = null, ?callable $condition = null ): void {
+		public function add( string $hook, callable $callback, ?int $priority = null, ?callable $condition = null ): void {
 			$this->actions[] = [
-				'tag'       => $tag,
-				'function'  => $function_to_remove,
+				'hook'      => $hook,
+				'callback'  => $callback,
 				'priority'  => $priority ?? $this->default_priority,
 				'condition' => $condition
 			];
@@ -114,12 +122,16 @@ if ( ! class_exists( 'Unhooker' ) ) :
 		}
 
 		/**
-		 * Set or change the hook to trigger action removal.
+		 * Set or change the WordPress hook and its priority to trigger action removal.
 		 *
-		 * @param string $hook New hook to bind the removal process to.
+		 * @param string   $hook          The WordPress hook to which the removal process will be bound.
+		 * @param int|null $hook_priority Optional. The priority at which the removals are executed on the hook. Defaults to 10.
 		 */
-		public function set_hook( string $hook ): void {
+		public function set_hook( string $hook, ?int $hook_priority = null ): void {
 			$this->hook = $hook;
+			if ( $hook_priority !== null ) {
+				$this->hook_priority = $hook_priority;
+			}
 		}
 
 		/**
@@ -128,7 +140,7 @@ if ( ! class_exists( 'Unhooker' ) ) :
 		 *
 		 * @return array Results of action removals.
 		 */
-		private function perform_removal(): array {
+		public function perform_removal(): array {
 			$this->removal_results = []; // Reset results before each removal operation
 			if ( $this->global_condition && ! call_user_func( $this->global_condition ) ) {
 				return []; // If global condition fails, skip all actions.
@@ -136,14 +148,9 @@ if ( ! class_exists( 'Unhooker' ) ) :
 
 			foreach ( $this->actions as $action ) {
 				if ( empty( $action['condition'] ) || call_user_func( $action['condition'] ) ) {
-					$success = remove_action( $action['tag'], $action['function'], $action['priority'] );
+					$success = remove_filter( $action['hook'], $action['callback'], $action['priority'] );
 					if ( $success ) {
-						$this->removal_results[] = [
-							'tag'      => $action['tag'],
-							'function' => $action['function'],
-							'priority' => $action['priority'],
-							'removed'  => $success
-						];
+						$this->removal_results[] = $action;
 					}
 				}
 			}
@@ -158,7 +165,7 @@ if ( ! class_exists( 'Unhooker' ) ) :
 		 */
 		public function commit(): array {
 			if ( $this->hook ) {
-				add_action( $this->hook, [ $this, 'perform_removal' ] );
+				add_action( $this->hook, [ $this, 'perform_removal' ], $this->hook_priority );
 
 				return [];
 			} else {
@@ -182,6 +189,15 @@ if ( ! class_exists( 'Unhooker' ) ) :
 		 */
 		public function get_removal_results(): array {
 			return $this->removal_results;
+		}
+
+		/**
+		 * Verifies if all actions queued for removal were successfully processed.
+		 *
+		 * @return bool Returns true if the number of actions removed matches the number of actions queued, false otherwise.
+		 */
+		public function verify_results(): bool {
+			return count( $this->actions ) === count( $this->removal_results );
 		}
 
 	}
