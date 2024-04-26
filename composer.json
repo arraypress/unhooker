@@ -19,7 +19,8 @@
   },
   "autoload": {
     "psr-4": {
-      "ArrayPress\\Utils\\": "src/"
+      "ArrayPress\\Utils\\Classes\\": "src/Classes/",
+      "ArrayPress\\Utils\\Traits\\": "src/Traits/"
     },
     "files": [
       "src/Functions.php"

@@ -47,6 +47,32 @@ remove_actions( [ 'init' => 'wp_cron' ] );
 remove_filters( [ 'the_content' => 'wpautop' ] );
 ```
 
+### Class Method Removal
+
+```php
+// Example class to add and then remove hooks.
+class Example_Class {
+    public static function init_hooks() {
+        add_action( 'wp_footer', [ self::class, 'footer_action' ], 10 );
+    }
+
+	public static function footer_action() {
+		echo '<p>This will be removed by the Unhooker.</p>';
+	}
+}
+
+// Initialize hooks by the class.
+Example_Class::init_hooks();
+
+remove_class_hooks( [
+    [
+        'hook'        => 'wp_footer',
+        'class_name'  => 'Example_Class',
+        'method_name' => 'footer_action',
+    ]
+], 'init' );
+```
+
 #### Advanced Removal
 
 Remove multiple actions with one call, each with specific conditions and priorities.
@@ -56,7 +82,7 @@ remove_actions( [
     [ 'hook' => 'wp_head', 'callback' => 'wp_generator', 'priority' => 1 ],
     [ 'hook' => 'wp_head', 'callback' => 'rel_canonical' ],
     [ 'hook' => 'wp_footer', 'callback' => 'wp_print_footer_scripts', 'priority' => 20 ]
-], 10, null, 'wp_loaded', 15 );
+], 'wp_loaded', 15 );
 ```
 
 #### Conditional and Delayed Removal
@@ -65,8 +91,8 @@ Remove an action only if a certain condition is met, and bind it to a specific h
 
 ```php
 remove_actions([
-    ['hook' => 'wp_footer', 'callback' => 'wp_print_footer_scripts', 'priority' => 20]
-], 10, function() { return is_page( 'home' ); }, 'wp_loaded', 15 );
+    [ 'hook' => 'wp_footer', 'callback' => 'wp_print_footer_scripts', 'priority' => 20 ]
+], 'wp_loaded', 15, function() { return is_page( 'home' ); } );
 ```
 
 ### Conditional Removal
@@ -74,11 +100,8 @@ remove_actions([
 ```php
 remove_actions( [
     [ 'hook' => 'wp_head', 'callback' => 'wp_generator' ]
-    ], 10, function() {
-    return is_singular('download');
-}, 'wp' );
+    ], 'wp', 10, function() { return is_singular('download'); } );
 ```
-
 ### Setting Filters
 
 #### Basic Filter Setting
@@ -92,9 +115,9 @@ set_filters( [ 'show_admin_bar' => false ] );
 set_filters([
     'show_admin_bar' => [ 'value' => false, 'condition' => function() { return !current_user_can('administrator'); } ],
     'excerpt_length' => [ 'value' => 20, 'condition' => function() { return is_home(); } ]
-], function() {
+], 'init', 20, function() {
     return is_user_logged_in();
-}, 'init', 20 );
+} );
 ```
 
 #### Conditionally Applying Filters on a Hook
@@ -104,9 +127,9 @@ Apply a filter only if a certain condition is met, during a specific hook:
 ```php
 set_filters( [
     'show_admin_bar' => false
-], function() {
+], 'init', 20, function() {
     return ! is_user_logged_in();
-}, 'init', 20 );
+} );
 ```
 
 #### Advanced Filter Setting with Error Handling
@@ -116,9 +139,9 @@ Set a filter with error handling and conditional logic:
 ```php
 set_filters( [
     'comment_post' => true
-], function() {
+], 'comments_open', 10, function() {
     return current_user_can( 'moderate_comments' );
-}, 'comments_open', 10, function( $error ) {
+}, function( $error ) {
     error_log(' Failed to set filter: ' . $error->getMessage() );
 } );
 ```
