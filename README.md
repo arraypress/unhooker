@@ -33,9 +33,10 @@ composer require arraypress/unhooker
 require_once __DIR__ . '/vendor/autoload.php';
 
 // Use the functions from the ArrayPress\Utils namespace.
-use function ArrayPress\Utils\remove_actions;
-use function ArrayPress\Utils\remove_filters;
-use function ArrayPress\Utils\set_filters;
+use function ArrayPress\Utils\Unhooker\remove_actions;
+use function ArrayPress\Utils\Unhooker\remove_filters;
+use function ArrayPress\Utils\Unhooker\set_filters;
+use function ArrayPress\Utils\Unhooker\remove_class_hooks;
 ```
 ### Removing Actions and Filters
 

@@ -13,9 +13,9 @@ declare( strict_types=1 );
 
 namespace ArrayPress\Utils\Unhooker;
 
-use ArrayPress\Utils\Classes\FilterSetter;
-use ArrayPress\Utils\Classes\MethodUnhooker;
-use ArrayPress\Utils\Classes\Unhooker;
+use ArrayPress\Utils\Unhooker\Classes\FilterSetter;
+use ArrayPress\Utils\Unhooker\Classes\MethodUnhooker;
+use ArrayPress\Utils\Unhooker\Classes\Unhooker;
 
 use Exception;
 use InvalidArgumentException;
