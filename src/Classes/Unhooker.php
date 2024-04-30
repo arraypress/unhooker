@@ -25,7 +25,7 @@
 
 declare( strict_types=1 );
 
-namespace ArrayPress\Utils\Classes;
+namespace ArrayPress\Utils\Unhooker\Classes;
 
 use ArrayPress\Utils\Unhooker\Traits\Hooks;
 use ArrayPress\Utils\Unhooker\Traits\Results;

@@ -125,11 +125,7 @@ set_filters([
 Apply a filter only if a certain condition is met, during a specific hook:
 
 ```php
-set_filters( [
-    'show_admin_bar' => false
-], 'init', 20, function() {
-    return ! is_user_logged_in();
-} );
+set_filters( [ 'show_admin_bar' => false ], 'init', 20, function() { return ! is_user_logged_in(); } );
 ```
 
 #### Advanced Filter Setting with Error Handling
