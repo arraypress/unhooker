@@ -51,7 +51,7 @@ if ( ! trait_exists( 'Results' ) ) :
 		 * @return bool Returns true if the number of actions removed matches the number of actions queued, false otherwise.
 		 */
 		public function verify_results(): bool {
-			if ( ! isset( $this->hooks ) || ! is_array( $this->hooks ) ) {
+			if ( ! isset( $this->hooks ) ) {
 				throw new \RuntimeException( "Required property \$hooks is not set or is not an array." );
 			}
 

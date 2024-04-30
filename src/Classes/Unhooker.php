@@ -73,7 +73,7 @@ if ( ! class_exists( 'Unhooker' ) ) :
 			if ( $this->hooks ) {
 				foreach ( $this->hooks as $hook ) {
 					if ( empty( $hook['condition'] ) || call_user_func( $hook['condition'] ) ) {
-						$success = remove_filter( $hook['hook'], $hook['function'], $hook['priority'] );
+						$success = remove_filter( $hook['hook_name'], $hook['function'], $hook['priority'] );
 						if ( $success ) {
 							$this->removal_results[] = $hook;
 						}

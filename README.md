@@ -80,9 +80,9 @@ Remove multiple actions with one call, each with specific conditions and priorit
 
 ```php
 remove_actions( [
-    [ 'hook' => 'wp_head', 'callback' => 'wp_generator', 'priority' => 1 ],
-    [ 'hook' => 'wp_head', 'callback' => 'rel_canonical' ],
-    [ 'hook' => 'wp_footer', 'callback' => 'wp_print_footer_scripts', 'priority' => 20 ]
+    [ 'hook' => 'wp_head', 'function' => 'wp_generator', 'priority' => 1 ],
+    [ 'hook' => 'wp_head', 'function' => 'rel_canonical' ],
+    [ 'hook' => 'wp_footer', 'function' => 'wp_print_footer_scripts', 'priority' => 20 ]
 ], 'wp_loaded', 15 );
 ```
 
@@ -92,7 +92,7 @@ Remove an action only if a certain condition is met, and bind it to a specific h
 
 ```php
 remove_actions([
-    [ 'hook' => 'wp_footer', 'callback' => 'wp_print_footer_scripts', 'priority' => 20 ]
+    [ 'hook' => 'wp_footer', 'function' => 'wp_print_footer_scripts', 'priority' => 20 ]
 ], 'wp_loaded', 15, function() { return is_page( 'home' ); } );
 ```
 
@@ -100,7 +100,7 @@ remove_actions([
 
 ```php
 remove_actions( [
-    [ 'hook' => 'wp_head', 'callback' => 'wp_generator' ]
+    [ 'hook' => 'wp_head', 'function' => 'wp_generator' ]
     ], 'wp', 10, function() { return is_singular('download'); } );
 ```
 ### Setting Filters
@@ -114,7 +114,7 @@ set_filters( [ 'show_admin_bar' => false ] );
 
 // Apply multiple filters, each with specific conditions and priorities.
 set_filters([
-    'show_admin_bar' => [ 'value' => false, 'condition' => function() { return !current_user_can('administrator'); } ],
+    'show_admin_bar' => [ 'value' => false, 'condition' => function() { return ! current_user_can( 'administrator' ); } ],
     'excerpt_length' => [ 'value' => 20, 'condition' => function() { return is_home(); } ]
 ], 'init', 20, function() {
     return is_user_logged_in();

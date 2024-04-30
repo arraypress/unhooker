@@ -50,14 +50,14 @@ if ( ! function_exists( 'remove_filters' ) ) {
 
 			foreach ( $hooks as $key => $value ) {
 				if ( is_int( $key ) && is_array( $value ) ) {
-					if ( ! isset( $value['hook'], $value['callback'] ) || ! is_callable( $value['callback'] ) ) {
+					if ( ! isset( $value['hook'], $value['function'] ) || ! is_callable( $value['function'] ) ) {
 						if ( $error_callback && is_callable( $error_callback ) ) {
 							call_user_func( $error_callback, new InvalidArgumentException( "Invalid tag or function" ) );
 						}
 						continue;
 					}
 					$hook_name          = $value['hook'];
-					$function_to_remove = $value['callback'];
+					$function_to_remove = $value['function'];
 					$priority           = $value['priority'] ?? $default_priority;
 					$condition          = $value['condition'] ?? null;
 				} elseif ( is_string( $key ) && is_string( $value ) ) {

@@ -89,15 +89,15 @@ if ( ! trait_exists( 'Hooks' ) ) :
 		/**
 		 * Adds a hook to the queue.
 		 *
-		 * @param string        $hook_name The name of the action or filter.
-		 * @param mixed         $callback  The callback function or method to be applied.
-		 * @param int|null      $priority  Optional. The priority of the hook. Default is 10.
-		 * @param callable|null $condition A local conditional callback that must return true to apply the hook.
+		 * @param string        $hook_name         The name of the action or filter.
+		 * @param mixed         $callback_function The callback function or method to be applied.
+		 * @param int|null      $priority          Optional. The priority of the hook. Default is 10.
+		 * @param callable|null $condition         A local conditional callback that must return true to apply the hook.
 		 */
-		public function add( string $hook_name, $callback, ?int $priority = null, ?callable $condition = null ): void {
+		public function add( string $hook_name, $callback_function, ?int $priority = null, ?callable $condition = null ): void {
 			$this->hooks[] = [
 				'hook_name' => $hook_name,
-				'function'  => $callback,
+				'function'  => $callback_function,
 				'priority'  => $priority ?? $this->default_priority,
 				'condition' => $condition
 			];
