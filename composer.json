@@ -19,8 +19,8 @@
   },
   "autoload": {
     "psr-4": {
-      "ArrayPress\\Utils\\Classes\\": "src/Classes/",
-      "ArrayPress\\Utils\\Traits\\": "src/Traits/"
+      "ArrayPress\\Utils\\Unhooker\\Classes\\": "src/Classes/",
+      "ArrayPress\\Utils\\Unhooker\\Traits\\": "src/Traits/"
     },
     "files": [
       "src/Functions.php"
